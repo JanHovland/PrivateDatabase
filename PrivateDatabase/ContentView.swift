@@ -5,6 +5,7 @@
 
 import SwiftUI
 
+@MainActor
 struct ContentView: View {
     @EnvironmentObject var vm: ViewModel
 
@@ -34,8 +35,33 @@ struct ContentView: View {
                     Button(action: { vm.getLastPerson() }, label: {
                         Image(systemName: "arrow.clockwise")
                     })
+//                    Button(action: { vm.deleteLastPerson() }, label: {
+//                        Image(systemName: "arrow.clockwise")
+//                    })
+
                 }
+            }
+            .task() {
+                do {
+                    try await vm.deleteLastPerson()
+                } catch {
+                    print(error.localizedDescription)
+                }
+                do {
+                    try await vm.savePerson()
+                } catch {
+                    print(error.localizedDescription)
+                }
+
+                
+                
+                
+                
+                // vm.getLastPerson()
             }
         }
     }
 }
+
+
+

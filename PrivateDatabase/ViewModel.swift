@@ -67,13 +67,13 @@ class ViewModel: ObservableObject {
         saveOperation.modifyRecordsResultBlock = { [weak self] result in
 //            os_log("Record with ID \(record.recordID.recordName) was saved.")
             
-            DispatchQueue.main.async {
+           DispatchQueue.main.async {
                 switch result {
                 case .failure(let error):
-                    print(error)
+                    print(error.localizedDescription)
                     
                 case .success:
-                    print("Saved OK")
+                    print("Saved OK = \(result) ")
                 }
             }
 
@@ -98,28 +98,58 @@ class ViewModel: ObservableObject {
 //            }
 //        }
 
+        
+//        database.save(<#T##record: CKRecord##CKRecord#>)
         database.add(saveOperation)
     }
 
     /// Deletes the last person record.
     /// - Parameter completionHandler: An optional handler to process completion `success` or `failure`.
-    func deleteLastPerson(completionHandler: ((Result<Void, Error>) -> Void)? = nil) {
-        database.delete(withRecordID: lastPersonRecordID) { recordID, error in
-            if let recordID = recordID {
-                os_log("Record with ID \(recordID.recordName) was deleted.")
-            }
-
-            if let error = error {
-                self.reportError(error)
-
-                // If a completion was supplied, pass along the error here.
-                completionHandler?(.failure(error))
-            } else {
-                // If a completion was supplied, like during tests, call it back now.
-                completionHandler?(.success(()))
-            }
+//    func deleteLastPerson(completionHandler: ((Result<Void, Error>) -> Void)? = nil) {
+//        database.delete(withRecordID: lastPersonRecordID) { recordID, error in
+//            if let recordID = recordID {
+//                os_log("Record with ID \(recordID.recordName) was deleted.")
+//            }
+//
+//            if let error = error {
+//                self.reportError(error)
+//
+//                // If a completion was supplied, pass along the error here.
+//                completionHandler?(.failure(error))
+//            } else {
+//                // If a completion was supplied, like during tests, call it back now.
+//                completionHandler?(.success(()))
+//            }
+//        }
+//    }
+    
+    func deleteLastPerson() async throws {
+        do {
+            let recordId = try await database.deleteRecord(withID: lastPersonRecordID)
+            os_log("Record with ID \(recordId) was deleted.")
+        } catch {
+            self.reportError(error)
+            throw error
         }
     }
+    
+    func savePerson() async throws {
+        
+        let personID = CKRecord.ID(recordName: "qwerty")
+        let personRecord = CKRecord(recordType: "Person", recordID: personID)
+        personRecord["name"] = "qwerty"
+
+        do {
+            let recordId = try await database.save(personRecord)
+            os_log("Record with ID \(recordId) was deleted.")
+        } catch {
+            self.reportError(error)
+            throw error
+        }
+    }
+    
+
+    
 
     /// Fetches the last person record and updates the published `lastPerson` property in the VM.
     /// - Parameter completionHandler: An optional handler to process completion `success` or `failure`.
